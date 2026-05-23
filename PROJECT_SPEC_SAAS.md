@@ -192,7 +192,8 @@ auto_topup      id, user_id, threshold_cents, amount_cents, stripe_customer_id, 
 **Telnyx**
 - WebRTC requires HTTPS in production (localhost is exempt)
 - One WebRTC credential connection per user session — current architecture already handles this correctly
-- Telnyx bills per 6-second increment on most routes — we round up to nearest minute for simplicity
+- **Billing increment — verify before coding:** Telnyx support article claims "60/60" (per-minute) billing. Our CDR empirically contradicts this: Japan 1.28min/$0.0220 and Australia 2.42min/$0.0405 are only consistent with per-6-second (or per-second) billing — per-minute would produce $0.034 and $0.051 respectively. Treat CDR as authoritative. Confirm with Telnyx support before finalising billing settlement code.
+- "Local calling" (CLI and CLD in same country) routes through in-country Tier-1 interconnect — improves completion rates and caller ID display, rate to us unchanged
 - Telnyx E911 provisioning required for US users before US marketing
 
 **Hosting (Railway / Fly.io)**
