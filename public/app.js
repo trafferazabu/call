@@ -388,13 +388,17 @@ async function initializeTelnyxSDK(token) {
             logToTerminal("Voice channel open! Remote stream connected.", "success");
             handleCallConnected(call.remoteStream);
             break;
-          case 'hangup':
+          case 'hangup': {
             const cause = call.cause || 'Unknown Cause';
             const causeCode = call.causeCode || 'N/A';
             const sipCode = call.sipCode || 'N/A';
             const sipReason = call.sipReason || 'N/A';
             logToTerminal(`⚠️ Network Disconnect: ${cause} (SIP Code: ${sipCode}, Reason: ${sipReason}, Cause Code: ${causeCode})`, "warning");
+            // Treat hangup as terminal — prevents ghost calls from session resurrection
+            handleCallEnded();
+            activeCall = null;
             break;
+          }
           case 'destroy':
             logToTerminal("Outbound session terminated.", "info");
             handleCallEnded();
@@ -482,6 +486,7 @@ async function triggerCall() {
       logToTerminal("Sending dial INVITE payload to carrier network...", "info");
       activeCall = telnyxClient.newCall({
         destinationNumber: formattedDest,
+        callerNumber: appConfig.verified_number || undefined,
         audio: audioConstraints,
         remoteElement: document.getElementById('remote-audio')
       });
@@ -953,27 +958,39 @@ function setupUIEventListeners() {
   keys.forEach(key => {
     key.addEventListener('click', () => {
       const val = key.getAttribute('data-value');
-      phoneNumberInput.value += val;
       playDTMF(val);
-      detectCountryFlag();
+      if (callState === 'connected' && !appConfig.simulation_mode && activeCall) {
+        // In-call: send digit to carrier, do not modify dial field
+        activeCall.dtmf(val);
+        logToTerminal(`DTMF sent to carrier: ${val}`, "info");
+      } else {
+        phoneNumberInput.value += val;
+        detectCountryFlag();
+      }
     });
   });
 
   // Physical Keyboard Input Hook
   window.addEventListener('keydown', (e) => {
     const key = e.key;
-    
-    // Only intercept if we are not focused inside a model input
+
+    // Only intercept if we are not focused inside a modal input
     if (document.activeElement.tagName === 'INPUT' && document.activeElement.id !== 'phone-number') {
       return;
     }
 
     if (/[0-9\*#\+]/.test(key)) {
       e.preventDefault();
-      phoneNumberInput.value += key;
-      playDTMF(key === '+' ? '0' : key);
-      detectCountryFlag();
-      
+      const digit = key === '+' ? '0' : key;
+      playDTMF(digit);
+      if (callState === 'connected' && !appConfig.simulation_mode && activeCall) {
+        activeCall.dtmf(digit);
+        logToTerminal(`DTMF sent to carrier: ${digit}`, "info");
+      } else {
+        phoneNumberInput.value += key;
+        detectCountryFlag();
+      }
+
       // Visual feedback on dialer
       const matchingBtn = document.querySelector(`.key-btn[data-value="${key}"]`);
       if (matchingBtn) {
@@ -983,9 +1000,10 @@ function setupUIEventListeners() {
     } else if (key === 'Backspace') {
       e.preventDefault();
       backspaceInput();
-    } else if (key === 'Enter' && callState === 'idle') {
+    } else if (key === 'Enter') {
       e.preventDefault();
-      triggerCall();
+      if (callState === 'idle') triggerCall();
+      else if (callState === 'connected' || callState === 'ringing') hangUpCall();
     }
   });
 
@@ -1107,6 +1125,16 @@ function setupUIEventListeners() {
     });
   }
 
+  // Event delegation for call buttons in history and contacts lists
+  historyList.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-item-call');
+    if (btn) quickDial(btn.dataset.number);
+  });
+  contactsList.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-item-call');
+    if (btn) quickDial(btn.dataset.number);
+  });
+
   // Database actions triggers
   btnClearHistory.addEventListener('click', clearCallHistory);
   btnAddContact.addEventListener('click', () => modalContact.classList.remove('hidden'));
@@ -1169,6 +1197,13 @@ function switchPane(target) {
 /* ==========================================================================
    Data Rendering: History & Contacts (localStorage)
    ========================================================================== */
+
+// Escape user-controlled strings before inserting into innerHTML
+function sanitize(str) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(String(str)));
+  return d.innerHTML;
+}
 
 function saveCallRecord(number, direction, duration, status) {
   const cId = activeCall?.callId || 'sim-' + Date.now();
@@ -1264,9 +1299,9 @@ function renderHistoryList() {
     const durationStr = `${minutes}m ${seconds}s`;
 
     const displayName = item.name || item.number;
-    const initial = displayName.charAt(0).toUpperCase();
+    const initial = sanitize(displayName.charAt(0).toUpperCase());
 
-    // Determine cost HTML
+    // Determine cost HTML (cost/currency come from Telnyx API response — numeric, safe)
     let costBadgeHtml = '';
     if (item.costStatus === 'pending') {
       costBadgeHtml = `<span title="Polling Telnyx CDR...">Checking...</span>`;
@@ -1283,8 +1318,8 @@ function renderHistoryList() {
       <div class="item-left-info">
         <div class="avatar">${initial}</div>
         <div class="meta-details">
-          <span class="meta-name">${displayName}</span>
-          <span class="meta-phone">${item.name ? item.number : ''}</span>
+          <span class="meta-name">${sanitize(displayName)}</span>
+          <span class="meta-phone">${item.name ? sanitize(item.number) : ''}</span>
           <div class="meta-sub-row">
             <span class="call-log-icon icon-outgoing">
               <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="2.5" fill="none">
@@ -1302,7 +1337,7 @@ function renderHistoryList() {
         </div>
       </div>
       <div class="item-right-actions">
-        <button class="btn-item-call" onclick="quickDial('${item.number}')" title="Redial">
+        <button class="btn-item-call" data-number="${sanitize(item.number)}" title="Redial">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
           </svg>
@@ -1325,19 +1360,19 @@ function renderContactsList() {
   const sorted = [...contactsListDb].sort((a, b) => a.name.localeCompare(b.name));
 
   sorted.forEach(c => {
-    const initial = c.name.charAt(0).toUpperCase();
+    const initial = sanitize(c.name.charAt(0).toUpperCase());
     const card = document.createElement('div');
     card.className = 'list-item-card';
     card.innerHTML = `
       <div class="item-left-info">
         <div class="avatar">${initial}</div>
         <div class="meta-details">
-          <span class="meta-name">${c.name}</span>
-          <span class="meta-phone">${c.phone}</span>
+          <span class="meta-name">${sanitize(c.name)}</span>
+          <span class="meta-phone">${sanitize(c.phone)}</span>
         </div>
       </div>
       <div class="item-right-actions">
-        <button class="btn-item-call" onclick="quickDial('${c.phone}')" title="Call">
+        <button class="btn-item-call" data-number="${sanitize(c.phone)}" title="Call">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
           </svg>
@@ -1356,10 +1391,10 @@ function clearCallHistory() {
   }
 }
 
-// Global hook triggered from HTML onclick redial action
-window.quickDial = function(number) {
+function quickDial(number) {
+  if (callState !== 'idle') return;
   phoneNumberInput.value = number;
   detectCountryFlag();
-  switchPane('history'); // View status console
+  switchPane('history');
   triggerCall();
-};
+}
