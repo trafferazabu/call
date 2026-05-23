@@ -120,15 +120,66 @@ Example shown to users: "A 1 min 30 sec call to Japan = $0.08" (vs $0.10 under p
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Frontend | Vanilla JS (ES6), HTML5, CSS3 | No framework, no build step — same as personal app |
-| Backend | Node.js + Express (ESM) | Extend current server.js — add auth and billing routes |
-| Telephony | Telnyx WebRTC SDK v2.26.4 | Pin version; test before upgrading |
+| Frontend | Vanilla JS (ES6), HTML5, CSS3 — multi-page | No framework, no build step. Separate HTML pages per view, per-page JS modules, shared utilities in `shared.js`. See Frontend Architecture below. |
+| Backend | Node.js + Express (ESM) | Keep and extend — add auth, billing, and webhook routes to existing server.js structure |
+| Telephony | Telnyx WebRTC SDK v2.26.4 | Pin version; test before upgrading. Integration code lifted directly from personal app. |
 | Database | Postgres (Neon or Railway managed) | User accounts, balance ledger, call history, sessions |
 | Payments | Stripe | Top-up charges, saved cards for auto top-up |
 | Auth | JWT (self-managed) or Supabase Auth | Decision needed — see Open Questions |
 | Hosting | Railway or Fly.io | Must be persistent Node.js process — NOT Vercel serverless |
 | Email | Resend or Postmark | Email verification, top-up receipts, expiry warnings |
-| Version Control | GitHub — trafferazabu/call | Master branch = personal app; SaaS on feature branches until ready |
+| Version Control | GitHub — trafferazabu/aerovoice | New repo, separate from personal app |
+
+### Frontend Architecture (Locked Decision)
+
+**Multi-page vanilla JS. No framework. No build step.**
+
+```
+public/
+├── index.html          → Landing / marketing (static)
+├── login.html
+├── register.html
+├── app.html            → The dialer (auth-gated)
+├── account.html        → Balance, top-up, history, auto top-up settings
+├── rates.html          → Published rate table
+├── js/
+│   ├── shared.js       → JWT helpers, fetch wrapper, sanitize(), common utilities
+│   ├── auth.js         → Handles login.html and register.html
+│   ├── app.js          → Dialer — Telnyx integration lifted from personal app
+│   ├── account.js
+│   └── rates.js
+├── style.css
+└── telnyx-webrtc.js    → Pinned v2.26.4
+```
+
+Express serves each HTML page. Auth middleware on the server redirects
+unauthenticated requests for `/app.html`, `/account.html` to `/login.html`.
+No client-side router needed.
+
+**What is lifted directly from the personal app (do not rewrite):**
+- Telnyx WebRTC connection setup and credential handling
+- Call state machine (`transitionCallState`, all state logic)
+- AudioContext singleton and `setupAudioContext()`
+- DTMF dual-layer (`playDTMF()` for UX + `activeCall.dtmf()` for carrier)
+- Canvas audio visualizer
+- All call event handlers (answered, hangup, ringing etc.)
+- `sanitize()` helper → move to `shared.js`
+
+**What is rebuilt fresh (same vanilla JS, clean structure):**
+- Multi-page HTML shell (landing, login, register, account, rates)
+- Auth pages and their JS
+- Balance display, top-up flow, auto top-up UI
+- Server-side call history and contact book UI
+- Rate table page
+
+**Why not React / Vue / Svelte:**
+The Telnyx WebRTC SDK is designed for vanilla JS. Managing WebRTC connections
+across component re-renders is genuinely awkward (refs, useEffect cleanup, event
+listener lifecycle). The calling interface is inherently imperative and event-driven —
+this is where component frameworks add the least value and the most friction.
+The surrounding SaaS UI (forms, balance display, rate table) is simple enough that
+vanilla JS modules handle it cleanly without a build pipeline.
+Speed to market also matters — the market window (post-Skype) is open now.
 
 ---
 
@@ -274,6 +325,8 @@ Call initiation request
 | 2026-05-24 | Railway/Fly.io over Vercel | WebRTC needs persistent Node.js process; Vercel serverless incompatible | Active |
 | 2026-05-24 | Postgres for user data | Standard relational fit for ledger, call history, user records | Active |
 | 2026-05-24 | Personal app protected during SaaS build | Separate spec; no changes that disrupt personal calling capability | Active |
+| 2026-05-24 | Multi-page vanilla JS — no framework, no build step | Telnyx WebRTC SDK is designed for vanilla JS; component frameworks create friction managing WebRTC state across re-renders. Multi-page structure (separate HTML per view, per-page JS modules) solves the single-file monolith problem without adding build complexity. Telnyx integration code lifted directly from personal app — it works on the live network and took real debugging time to get right. | Active |
+| 2026-05-24 | SaaS gets its own repo (trafferazabu/aerovoice) | Clean separation from personal app. Personal app repo (trafferazabu/call) stays frozen. | Active |
 | 2026-05-24 | Japan national DID post-MVP, not MVP | Local Japanese DIDs unavailable (MIC regulation since March 2023); national +8150 (~$4.50/month) is the fix for "Unknown" CLI — not a blocker for launch, add post-MVP | Active |
 | 2026-05-24 | Telnyx billing increment: CDR-confirmed sub-minute | CDR data (Japan $0.0220/1.28min, AU $0.0405/2.42min) is only consistent with per-6-second billing, not per-minute. Telnyx support article claiming "60/60" contradicts empirical data — CDR treated as authoritative pending written confirmation from Telnyx | Pending confirmation |
 

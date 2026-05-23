@@ -74,6 +74,7 @@ everything is localStorage. This is a continuity contract, not a build target.
 
 | Decision | Detail |
 |---|---|
+| Frontend architecture | Multi-page vanilla JS. No framework (React/Vue/Svelte), no build step. Separate HTML per view (`index`, `login`, `register`, `app`, `account`, `rates`), per-page JS modules, shared utilities in `shared.js`. Telnyx WebRTC integration code lifted directly from personal app — do not rewrite it. See Tech Stack section of PROJECT_SPEC_SAAS.md for the full file map and the explicit list of what to lift vs. rebuild. |
 | Business model | Prepaid credits — no subscription |
 | Minimum top-up | $5 |
 | Billing interval | Per 20 seconds, rounded up. Displayed as $/min equivalent with "billed per 20 seconds" noted. Genuinely better for customers than per-minute; always profitable vs Telnyx sub-minute billing. |
@@ -192,3 +193,9 @@ The SaaS repo does not exist yet. Creating it is the first task of the next buil
   a migration script.
 - Do not place any real Telnyx API key, Stripe key, or other secret in any file under
   `public/` — ever.
+- Do not introduce React, Vue, Svelte, or any JS framework to the SaaS frontend. This
+  decision is locked. The Telnyx WebRTC SDK is vanilla JS; component frameworks create
+  real friction managing WebRTC state across re-renders. Multi-page vanilla JS with
+  per-page modules is the chosen architecture.
+- Do not introduce a build step (Webpack, Vite, Rollup, TypeScript compilation) to any
+  file under `public/`. All frontend files must run directly in the browser as-is.

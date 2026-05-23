@@ -32,9 +32,30 @@ Keep it exactly as-is. No changes. The personal app is done.
 1. Create new GitHub repo: `trafferazabu/aerovoice` (public or private — owner's call)
 2. Create new local folder: `D:\aerovoice`
 3. Seed it from the personal app — copy these files as the starting point:
-   - `server.js` (will be heavily extended)
-   - `public/index.html`, `public/app.js`, `public/style.css`, `public/telnyx-webrtc.js`
+   - `server.js` (will be extended, not replaced)
+   - `public/telnyx-webrtc.js` (pinned SDK — copy exactly)
+   - `public/app.js` (rename/restructure — Telnyx integration code is lifted from here)
    - `package.json`, `.gitignore`, `.env.example`, `CLAUDE.md`
+   Then create the multi-page structure (do not copy `index.html` — rebuild it):
+   ```
+   public/
+   ├── index.html       (new — landing/marketing page)
+   ├── login.html       (new)
+   ├── register.html    (new)
+   ├── app.html         (new — dialer shell; Telnyx JS code lifted from old app.js)
+   ├── account.html     (new)
+   ├── rates.html       (new)
+   ├── js/
+   │   ├── shared.js    (new — JWT helpers, fetch wrapper, sanitize())
+   │   ├── auth.js      (new)
+   │   ├── app.js       (new file, Telnyx integration lifted from personal app.js)
+   │   ├── account.js   (new)
+   │   └── rates.js     (new)
+   ├── style.css        (copy from personal app, extend)
+   └── telnyx-webrtc.js (copy exact — pinned v2.26.4)
+   ```
+   Architecture decision is locked. No framework. No build step. See PROJECT_SPEC.md
+   Tech Stack section for the full list of what to lift vs. rebuild.
 4. Copy spec and analysis docs across:
    - `PROJECT_SPEC_SAAS.md` → rename to `PROJECT_SPEC.md` in the new repo
    - `MARKET_ANALYSIS.md`
