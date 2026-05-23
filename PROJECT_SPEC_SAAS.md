@@ -82,7 +82,7 @@ Build and ship a browser-based international calling SaaS on a prepaid credit mo
 | **Model** | Prepaid credit — no subscription |
 | **Minimum top-up** | $5 |
 | **Credit expiry** | 2 years from last activity |
-| **Billing interval** | Per minute, partial minutes rounded up |
+| **Billing interval** | Per 20 seconds, rounded up to next 20-second increment — displayed to users as $/min equivalent; "billed per 20 seconds" is the stated differentiator |
 | **Margin target** | ~3× Telnyx wholesale cost per destination |
 | **Free first call** | Yes — no registration, no credit card; one per device/IP |
 | **Auto top-up** | User-configurable threshold ($x) and amount ($y); never runs out mid-call |
@@ -90,23 +90,28 @@ Build and ship a browser-based international calling SaaS on a prepaid credit mo
 
 ### Published Rate Table (Launch Rates — Verify Telnyx Cost Before Publishing)
 
-| Destination | Our Rate | Telnyx est. cost | Margin |
-|---|---|---|---|
-| USA (mobile + landline) | $0.02/min | ~$0.004 | ~5× |
-| Canada | $0.02/min | ~$0.004 | ~5× |
-| UK (mobile) | $0.03/min | ~$0.008 | ~3.75× |
-| Australia (mobile) | $0.05/min | ~$0.017 | ~3× |
-| Japan (mobile) | **$0.05/min** | ~$0.017 | ~3× |
-| Germany (mobile) | $0.04/min | ~$0.012 | ~3.3× |
-| France (mobile) | $0.04/min | ~$0.012 | ~3.3× |
-| India (mobile) | $0.03/min | ~$0.008 | ~3.75× |
-| Brazil (mobile) | $0.06/min | ~$0.018* | ~3.3× |
-| Nigeria (mobile) | $0.15/min | ~$0.05* | ~3× |
-| South Africa (mobile) | $0.12/min | ~$0.04* | ~3× |
+Rates displayed as $/min equivalent. Billing is in 20-second increments (always rounded up).
+Example shown to users: "A 1 min 30 sec call to Japan = $0.08" (vs $0.10 under per-minute billing).
 
-*Estimated — verify live Telnyx CDR before publishing these destinations.*
+| Destination | Our Rate | Telnyx confirmed cost | Status | Margin |
+|---|---|---|---|---|
+| Japan (mobile) | **$0.05/min** | $0.017/min ✓ CDR confirmed | ✅ Verified | ~2.9× |
+| Australia (mobile) | $0.05/min | $0.017/min ✓ CDR confirmed | ✅ Verified | ~2.9× |
+| USA (mobile + landline) | $0.02/min | ~$0.004* | ⚠️ Estimate | ~5× |
+| Canada | $0.02/min | ~$0.004* | ⚠️ Estimate | ~5× |
+| UK (mobile) | $0.03/min | ~$0.008* | ⚠️ Estimate | ~3.75× |
+| Germany (mobile) | $0.04/min | ~$0.012* | ⚠️ Estimate | ~3.3× |
+| France (mobile) | $0.04/min | ~$0.012* | ⚠️ Estimate | ~3.3× |
+| India (mobile) | $0.03/min | ~$0.008* | ⚠️ Estimate | ~3.75× |
+| Brazil (mobile) | $0.06/min | ~$0.018* | ⚠️ Estimate | ~3.3× |
+| Nigeria (mobile) | $0.15/min | ~$0.05* | ⚠️ Estimate | ~3× |
+| South Africa (mobile) | $0.12/min | ~$0.04* | ⚠️ Estimate | ~3× |
 
-**⚠️ Action required before launch:** Place test calls to each destination, pull CDR, confirm actual Telnyx rate, then set published rate at 3× that figure.
+*Estimated — Telnyx does not expose outbound termination rates via their REST API. Only CDR from real calls is authoritative.*
+
+**⚠️ Action required before launch:** Place a 20-second test call to each ⚠️ Estimate destination, pull CDR via `GET /v2/detail_records?filter[call_leg_id]={id}`, confirm actual Telnyx rate, then set published rate at 3× that figure. Japan and Australia are confirmed — launch with those two as MVP destinations, add others after verification.
+
+**Volume discount upside (Growth Plan):** At $1,000+/month, Telnyx applies an automatic 8% discount on voice. At that spend level, Japan confirmed cost drops from $0.017 to ~$0.0156/min, improving effective margin to ~3.2× at our $0.05 rate. Additional tiers above $1,000/month are negotiated.
 
 ---
 
@@ -217,7 +222,8 @@ Call initiation request
     │
     ├── [Check 1] User authenticated? → No → Reject
     ├── [Check 2] Balance ≥ 1 minute at destination rate? → No → Show top-up prompt
-    ├── [Check 3] Destination in IRSF blocklist? → Yes → Reject with "destination unavailable"
+    ├── [Check 3] Destination is emergency number (911/112/999/110)? → Yes → Reject with "not an emergency service"
+    ├── [Check 3b] Destination in IRSF blocklist? → Yes → Reject with "destination unavailable"
     ├── [Check 4] User under daily spend cap? → No → Reject with "daily limit reached"
     ├── [Check 5] User under simultaneous call limit (1)? → No → Reject
     │
@@ -259,7 +265,8 @@ Call initiation request
 |---|---|---|---|
 | 2026-05-24 | Prepaid credits, no subscription | Market fit for infrequent callers; eliminates churn psychology | Active |
 | 2026-05-24 | $5 minimum top-up | Market standard (Yadaphone, BubblyPhone); covers Stripe transaction fees | Active |
-| 2026-05-24 | Per-minute billing, round up | Universal market standard; user-familiar; no deviating from industry norm | Active |
+| 2026-05-24 | Per-minute billing, round up | Universal market standard; user-familiar; no deviating from industry norm | ❌ Reverted — see below |
+| 2026-05-24 | Per-20-second billing, round up | Strictly better for customers (max 19-second rounding penalty vs 59-second); always profitable vs Telnyx per-6-second billing; genuine differentiator. Display as $/min equivalent with "billed per 20 seconds" note. | Active |
 | 2026-05-24 | Free first call, no CC | Proven acquisition tactic by top competitors; removes all trial friction | Active |
 | 2026-05-24 | Japan at $0.05/min as hero price | 7.5× cheaper than Yadaphone on that route; defensible via Telnyx rates | Active |
 | 2026-05-24 | Railway/Fly.io over Vercel | WebRTC needs persistent Node.js process; Vercel serverless incompatible | Active |
@@ -272,8 +279,8 @@ Call initiation request
 
 - [ ] **Auth:** Self-managed JWT vs. Supabase Auth vs. Auth0? — Self-managed is simpler and cheaper at this scale; Supabase adds managed DB + auth in one service. Decide before M0.
 - [ ] **Hosting:** Railway vs. Fly.io? — Railway is simpler to get started; Fly.io has better global edge presence (lower latency for international calls). Needs a cost comparison.
-- [ ] **Telnyx rates:** Verify actual per-minute cost for all destinations in the rate table before publishing. Current data is from 2 live test calls only.
-- [ ] **E911:** Does serving Japanese-based users calling US numbers trigger US E911 requirement? Needs legal confirmation.
+- [ ] **Telnyx rates:** Verify via CDR for all ⚠️ Estimate destinations before publishing. Telnyx REST API does not expose outbound termination rates — CDR from real test calls is the only authoritative source.
+- [x] **E911 (Japanese users calling US):** Resolved — does NOT trigger US E911 requirement. E911 applies to US-based users. Block 911/112/999 server-side and display "not an emergency service" notice. E911 only required when provisioning US DIDs (V2 add-on feature).
 - [ ] **Credit expiry legality:** 2-year expiry — confirm this is legal in US, EU, Japan.
 - [ ] **Free first call implementation:** IP-based or device fingerprint? IP is easily circumvented; device fingerprint is more robust but raises privacy questions.
 - [ ] **BubblyPhone Japan rate:** Not found in research. If they match our $0.05, Japan hero story weakens. Verify before betting marketing on it.
