@@ -59,6 +59,7 @@ Build and ship a browser-based international calling SaaS on a prepaid credit mo
 - [ ] E911 compliance for US-based users (Telnyx provisioning)
 - [ ] Admin dashboard: user list, balance overview, fraud flags, call volume
 - [ ] Email receipt after each top-up
+- [ ] Japan national DID (+8150) — ~$4.50/month via Telnyx; sets AeroVoice outbound caller ID to a Japanese national number, fixing "Unknown" display on Japan-to-Japan calls. Note: Japanese LOCAL city numbers (Tokyo +813x etc.) are permanently unavailable from Telnyx since March 2023 due to Japanese MIC regulations requiring physical on-premise interconnection. National number is the only available option.
 
 ### Should Have — V2
 - [ ] Inbound phone number add-on ($1–2/month per DID via Telnyx)
@@ -273,6 +274,8 @@ Call initiation request
 | 2026-05-24 | Railway/Fly.io over Vercel | WebRTC needs persistent Node.js process; Vercel serverless incompatible | Active |
 | 2026-05-24 | Postgres for user data | Standard relational fit for ledger, call history, user records | Active |
 | 2026-05-24 | Personal app protected during SaaS build | Separate spec; no changes that disrupt personal calling capability | Active |
+| 2026-05-24 | Japan national DID post-MVP, not MVP | Local Japanese DIDs unavailable (MIC regulation since March 2023); national +8150 (~$4.50/month) is the fix for "Unknown" CLI — not a blocker for launch, add post-MVP | Active |
+| 2026-05-24 | Telnyx billing increment: CDR-confirmed sub-minute | CDR data (Japan $0.0220/1.28min, AU $0.0405/2.42min) is only consistent with per-6-second billing, not per-minute. Telnyx support article claiming "60/60" contradicts empirical data — CDR treated as authoritative pending written confirmation from Telnyx | Pending confirmation |
 
 ---
 
@@ -285,6 +288,7 @@ Call initiation request
 - [ ] **Credit expiry legality:** 2-year expiry — confirm this is legal in US, EU, Japan.
 - [ ] **Free first call implementation:** IP-based or device fingerprint? IP is easily circumvented; device fingerprint is more robust but raises privacy questions.
 - [ ] **BubblyPhone Japan rate:** Not found in research. If they match our $0.05, Japan hero story weakens. Verify before betting marketing on it.
+- [ ] **Telnyx billing increment confirmation:** CDR strongly suggests per-6-second billing. Telnyx support article claims per-minute (60/60). Email support@telnyx.com to get written confirmation of current billing increment for WebRTC outbound calls — this is a dependency for the billing settlement code.
 - [ ] **LLC jurisdiction:** Where to form? Delaware (US standard), Japan, or elsewhere? Affects banking, taxes, and liability.
 
 ---
@@ -310,7 +314,7 @@ Call initiation request
 
 | Issue | SaaS Impact | Plan |
 |---|---|---|
-| Caller ID "Unknown" on Japan domestic calls | Medium — affects Japanese users calling Japan | Purchase Telnyx Japanese DID for proper domestic CLI |
+| Caller ID "Unknown" on Japan domestic calls | Medium — affects Japanese users calling Japan | Purchase Telnyx Japan national DID (+8150, ~$4.50/month) and set as outbound CLI for Japan-destined calls. Note: local city numbers unavailable from Telnyx since March 2023 (Japanese MIC regulation). National number is the only viable option — displays as Japanese number, not city-specific. |
 | CDR poll holds HTTP connection 20s | High — blocks Express worker per call end | Replace with Telnyx webhook → async DB write |
 | No inbound call UI | Low for MVP | Inbound is post-MVP add-on feature |
 
