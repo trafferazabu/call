@@ -1,0 +1,1026 @@
+/* ==========================================================================
+   AeroVoice Glassmorphic Design Tokens & Variables
+   ========================================================================== */
+:root {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #131a2d;
+  
+  /* Slate & Indigo Palettes */
+  --accent-color: #4f46e5;      /* Indigo */
+  --accent-light: #818cf8;
+  --accent-glow: rgba(79, 70, 229, 0.25);
+  
+  --emerald: #10b981;           /* Connected / Active call */
+  --emerald-glow: rgba(16, 185, 129, 0.25);
+  
+  --rose: #ef4444;              /* Ended / Muted / Error */
+  --rose-glow: rgba(239, 68, 68, 0.25);
+  
+  /* Glassmorphism overlays */
+  --glass-bg: rgba(30, 41, 59, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: rgba(0, 0, 0, 0.4);
+  
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --transition-speed: 0.25s;
+  --font-sans: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ==========================================================================
+   Resets & Core Styles
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(at 10% 20%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+    radial-gradient(at 90% 80%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+  background-size: cover;
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* App container */
+.app-container {
+  display: grid;
+  grid-template-columns: 352px 330px 298px;
+  gap: 19px;
+  width: 100%;
+  max-width: 1000px;
+  height: 624px;
+  perspective: 1000px;
+}
+
+/* Shared Glassmorphic Console Panels */
+.console-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: 0 16px 40px var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ==========================================================================
+   Left Panel: Interactive Dialer Panel
+   ========================================================================== */
+.dialer-section {
+  padding: 19px 24px;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  color: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-group h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Status Pill states */
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all var(--transition-speed) ease;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-simulating {
+  color: var(--accent-light);
+  border-color: rgba(129, 140, 248, 0.2);
+}
+.status-simulating .status-dot {
+  background-color: var(--accent-light);
+  box-shadow: 0 0 8px var(--accent-light);
+}
+
+.status-ready {
+  color: var(--emerald);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.status-ready .status-dot {
+  background-color: var(--emerald);
+  box-shadow: 0 0 8px var(--emerald);
+}
+
+.status-connecting {
+  color: var(--text-secondary);
+}
+.status-connecting .status-dot {
+  background-color: var(--text-muted);
+  animation: blink 1s infinite alternate;
+}
+
+.status-error {
+  color: var(--rose);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.status-error .status-dot {
+  background-color: var(--rose);
+  box-shadow: 0 0 8px var(--rose);
+}
+
+/* --------------------------------------------------------------------------
+   Digital Display
+   -------------------------------------------------------------------------- */
+.display-container {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 13px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.call-meta-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 18px;
+}
+
+.call-timer {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent-light);
+  background: rgba(79, 70, 229, 0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.call-status {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.number-display-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flag-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+#phone-number {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 1.64rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  width: 100%;
+  padding: 3px 0;
+  caret-color: var(--accent-light);
+}
+
+#phone-number::placeholder {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 1.32rem;
+  font-weight: 400;
+}
+
+.display-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 6px;
+}
+
+.caller-id-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.caller-id-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--emerald);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.caller-id-badge .badge-dot {
+  width: 4px;
+  height: 4px;
+  background-color: var(--emerald);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--emerald);
+}
+
+.btn-icon-display {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed) ease;
+}
+
+.btn-icon-display:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Waveform Visualizer
+   -------------------------------------------------------------------------- */
+.visualizer-container {
+  height: 38px;
+  margin: 13px 0;
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px dashed rgba(255, 255, 255, 0.03);
+}
+
+#waveform-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Keypad Circular Grid
+   -------------------------------------------------------------------------- */
+.keypad-container {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  gap: 13px 19px;
+}
+
+.key-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.key-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+}
+
+.key-btn:active, .key-btn.active-press {
+  background: var(--accent-color);
+  border-color: var(--accent-light);
+  box-shadow: 0 0 13px var(--accent-glow);
+  transform: scale(0.92);
+}
+
+.key-btn .num {
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.key-btn .letters {
+  font-size: 0.5rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.key-btn:active .letters, .key-btn.active-press .letters {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* --------------------------------------------------------------------------
+   Dialer Primary Call Controls
+   -------------------------------------------------------------------------- */
+.controls-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.control-btn {
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  outline: none;
+  transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.secondary-btn {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.secondary-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.secondary-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Microphone Muted active state */
+#btn-mute.muted-active {
+  background: var(--rose-glow);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: var(--rose);
+  box-shadow: 0 0 10px var(--rose-glow);
+}
+
+/* The giant primary Call/Hangup button */
+.primary-btn {
+  width: 56px;
+  height: 56px;
+}
+
+.primary-btn.call-trigger {
+  background: var(--emerald);
+  color: #fff;
+  box-shadow: 0 6px 19px var(--emerald-glow);
+}
+
+.primary-btn.call-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.4);
+}
+
+.primary-btn.call-trigger:active {
+  transform: scale(0.92);
+}
+
+/* Dynamic State when hanging up */
+.primary-btn.hangup-trigger {
+  background: var(--rose);
+  color: #fff;
+  box-shadow: 0 8px 24px var(--rose-glow);
+  transform: rotate(135deg);
+}
+
+.primary-btn.hangup-trigger:hover {
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.4);
+}
+
+/* Speaker Drawer Active highlight */
+#btn-speaker.drawer-active {
+  background: var(--accent-glow);
+  border-color: rgba(79, 70, 229, 0.4);
+  color: var(--accent-light);
+}
+
+/* --------------------------------------------------------------------------
+   Audio Device Floating Popup
+   ========================================================================== */
+.audio-settings-drawer {
+  position: absolute;
+  bottom: 85px;
+  left: 24px;
+  right: 24px;
+  background: rgba(19, 26, 45, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  z-index: 100;
+}
+
+.audio-settings-drawer:not(.hidden) {
+  animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpFade {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 6px;
+}
+
+.drawer-header h3 {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.btn-close-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all var(--transition-speed) ease;
+}
+
+.btn-close-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-row label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.setting-row select {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.setting-row.inline-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-row input[type="range"] {
+  accent-color: var(--accent-light);
+  width: 140px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Right Panel: Call History & Contacts Sidebar
+   ========================================================================== */
+.sidebar-section {
+  border-left: 1px solid var(--glass-border);
+}
+
+.sidebar-tabs {
+  display: flex;
+  background: rgba(15, 23, 42, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 16px 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--transition-speed) ease;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--accent-light);
+}
+
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-color);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--transition-speed) ease;
+}
+
+.tab-btn.active::after {
+  transform: scaleX(1);
+}
+
+/* --------------------------------------------------------------------------
+   Panes Layout
+   -------------------------------------------------------------------------- */
+.pane-content {
+  display: none;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 16px;
+  height: calc(100% - 53px);
+}
+
+.pane-content.active {
+  display: flex;
+}
+
+.pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 11px;
+}
+
+.pane-header h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.text-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent-light);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.text-action-btn:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   Scrollable Items List
+   -------------------------------------------------------------------------- */
+.scroll-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+/* Custom Scrollbar */
+.scroll-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 9999px;
+}
+
+.scroll-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   ListItem Cards
+   -------------------------------------------------------------------------- */
+.list-item-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 10px 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all var(--transition-speed) ease;
+}
+
+.list-item-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+.item-left-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  color: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.meta-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.meta-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.meta-phone {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.meta-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Call status icon helpers */
+.call-log-icon {
+  display: inline-flex;
+  align-items: center;
+}
+.icon-outgoing { color: var(--emerald); }
+.icon-incoming { color: var(--accent-light); }
+.icon-missed { color: var(--rose); }
+
+/* Quick Action Row Right Buttons */
+.item-right-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-item-call {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  color: var(--emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.btn-item-call:hover {
+  background: var(--emerald);
+  color: #fff;
+  box-shadow: 0 0 8px var(--emerald-glow);
+}
+
+/* Empty states style */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* ==========================================================================
+   Popup Dialog / Modals Styles
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(7, 10, 19, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  transition: opacity var(--transition-speed) ease;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  transform: scale(1);
+  transition: transform var(--transition-speed) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-card h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.form-group input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-btn {
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.modal-btn.cancel {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.modal-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.modal-btn.submit {
+  background: var(--accent-color);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+.modal-btn.submit:hover {
+  background: var(--accent-light);
+  box-shadow: 0 6px 18px rgba(129, 140, 248, 0.4);
+}
+
+/* ==========================================================================
+   Utility Classes & Keyframes
+   ========================================================================== */
+.hidden {
+  display: none !important;
+}
+
+@keyframes blink {
+  0% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.icon-pulse {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Dynamic flag visualizer */
+.flag-icon.ringing {
+  animation: jitter 0.2s infinite;
+}
+
+@keyframes jitter {
+  0% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-5deg) scale(1.05); }
+  75% { transform: rotate(5deg) scale(1.05); }
+  100% { transform: rotate(0) scale(1); }
+}
+
+/* --------------------------------------------------------------------------
+   Developer Event Console Column
+   -------------------------------------------------------------------------- */
+.dev-log-section {
+  padding: 16px;
+}
+
+.log-panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.terminal-console {
+  background: rgba(7, 10, 19, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  line-height: 1.4;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.log-entry {
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.log-time {
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.log-info { color: var(--text-secondary); }
+.log-success { color: var(--emerald); }
+.log-warning { color: #f59e0b; }
+.log-error { color: var(--rose); }
+
+/* Responsive adjustment for app container */
+@media(max-width: 1024px) {
+  body {
+    overflow-y: auto;
+    align-items: flex-start;
+    padding: 10px;
+  }
+  .app-container {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-width: 368px;
+  }
+  .sidebar-section {
+    height: 416px;
+  }
+  .dev-log-section {
+    height: 300px;
+    margin-top: 19px;
+  }
+}

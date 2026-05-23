@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroVoice - Standalone International Call Console</title>
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- External CSS -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- WebRTC Adapter for Multi-browser compatibility -->
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  
+  <!-- Telnyx WebRTC SDK -->
+  <script src="telnyx-webrtc.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- MAIN INTERACTIVE DIALER PANEL -->
+    <main class="console-panel dialer-section">
+      <!-- Top Branding & Status Row -->
+      <header class="console-header">
+        <div class="brand-group">
+          <div class="brand-logo">
+            <svg class="icon-pulse" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+          </div>
+          <h1>AeroVoice</h1>
+        </div>
+        
+        <!-- Connection Status Pill -->
+        <div id="status-pill" class="status-pill status-simulating">
+          <span class="status-dot"></span>
+          <span id="status-text">Simulating Sandbox</span>
+        </div>
+      </header>
+
+      <!-- Digital Display Panel -->
+      <section class="display-container">
+        <!-- Call Info Overlay -->
+        <div class="call-meta-info">
+          <span id="call-timer" class="call-timer hidden">00:00</span>
+          <span id="call-status" class="call-status">Ready to call</span>
+        </div>
+        
+        <!-- Large Main Dial Number -->
+        <div class="number-display-wrapper">
+          <span id="country-flag-icon" class="flag-icon">🌐</span>
+          <input type="text" id="phone-number" placeholder="Enter number..." autocomplete="off">
+        </div>
+        
+        <!-- Under-display tools -->
+        <div class="display-actions">
+          <div class="caller-id-wrapper">
+            <span class="caller-id-label">Caller ID:</span>
+            <span class="caller-id-badge"><span class="badge-dot"></span><span id="caller-id-number">Verified (Auto)</span></span>
+          </div>
+          <button id="btn-backspace" class="btn-icon-display" title="Backspace">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+              <line x1="18" y1="9" x2="12" y2="15"></line>
+              <line x1="12" y1="9" x2="18" y2="15"></line>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Canvas Audio Waveform Visualizer -->
+      <section class="visualizer-container">
+        <canvas id="waveform-canvas"></canvas>
+      </section>
+
+      <!-- Keypad Grid -->
+      <section class="keypad-container">
+        <div class="keypad-grid">
+          <button class="key-btn" data-value="1"><span class="num">1</span><span class="letters">&nbsp;</span></button>
+          <button class="key-btn" data-value="2"><span class="num">2</span><span class="letters">ABC</span></button>
+          <button class="key-btn" data-value="3"><span class="num">3</span><span class="letters">DEF</span></button>
+          
+          <button class="key-btn" data-value="4"><span class="num">4</span><span class="letters">GHI</span></button>
+          <button class="key-btn" data-value="5"><span class="num">5</span><span class="letters">JKL</span></button>
+          <button class="key-btn" data-value="6"><span class="num">6</span><span class="letters">MNO</span></button>
+          
+          <button class="key-btn" data-value="7"><span class="num">7</span><span class="letters">PQRS</span></button>
+          <button class="key-btn" data-value="8"><span class="num">8</span><span class="letters">TUV</span></button>
+          <button class="key-btn" data-value="9"><span class="num">9</span><span class="letters">WXYZ</span></button>
+          
+          <button class="key-btn" data-value="*"><span class="num">*</span><span class="letters">&nbsp;</span></button>
+          <button class="key-btn" data-value="0"><span class="num">0</span><span class="letters">+</span></button>
+          <button class="key-btn" data-value="#"><span class="num">#</span><span class="letters">&nbsp;</span></button>
+        </div>
+      </section>
+
+      <!-- Dialer Controls -->
+      <section class="controls-container">
+        <button id="btn-mute" class="control-btn secondary-btn" disabled title="Mute Microphone">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+
+        <button id="btn-call" class="control-btn primary-btn call-trigger" title="Initiate Call">
+          <svg class="phone-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+        </button>
+
+        <button id="btn-speaker" class="control-btn secondary-btn" title="Audio Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+      </section>
+
+      <!-- Advanced Audio Drawer (Toggled by btn-speaker) -->
+      <section id="audio-settings-drawer" class="audio-settings-drawer hidden">
+        <div class="drawer-header">
+          <h3>Audio Devices</h3>
+          <button id="btn-close-audio" class="btn-close-icon" title="Close Settings">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="setting-row">
+          <label for="mic-select">Microphone:</label>
+          <select id="mic-select">
+            <option value="default">Default System Input</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label for="output-select">Speaker Output:</label>
+          <select id="output-select">
+            <option value="default">Default System Output</option>
+          </select>
+        </div>
+        <div class="setting-row inline-row">
+          <label>Volume:</label>
+          <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
+        </div>
+      </section>
+    </main>
+
+    <!-- RIGHT CONSOLE SIDEBAR (CALL HISTORY & CONTACTS) -->
+    <aside class="console-panel sidebar-section">
+      <!-- Navigation Tabs -->
+      <nav class="sidebar-tabs">
+        <button id="tab-history" class="tab-btn active">History</button>
+        <button id="tab-contacts" class="tab-btn">Contacts</button>
+      </nav>
+
+      <!-- Panel 1: Call History -->
+      <section id="pane-history" class="pane-content active">
+        <div class="pane-header">
+          <h2>Recent Calls</h2>
+          <button id="btn-clear-history" class="text-action-btn">Clear All</button>
+        </div>
+        <div id="history-list" class="scroll-list">
+          <div class="empty-state">
+            <p>No recent calls logged</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 2: Contacts -->
+      <section id="pane-contacts" class="pane-content">
+        <div class="pane-header">
+          <h2>Contacts</h2>
+          <button id="btn-add-contact" class="text-action-btn">+ Add Contact</button>
+        </div>
+        <div id="contacts-list" class="scroll-list">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+    </aside>
+
+    <!-- DEVELOPER LOG CONSOLE PANEL -->
+    <aside class="console-panel dev-log-section">
+      <div class="pane-header log-panel-header">
+        <h2>Live Gateway Logs</h2>
+        <button id="btn-clear-logs" class="text-action-btn">Clear Logs</button>
+      </div>
+      <div id="dev-log-terminal" class="scroll-list terminal-console">
+        <!-- Event logs populated by app.js -->
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- POPUP DIALOG: Add Contact -->
+  <div id="modal-contact" class="modal-overlay hidden">
+    <div class="modal-card glass">
+      <h2>Add New Contact</h2>
+      <form id="contact-form">
+        <div class="form-group">
+          <label for="contact-name">Full Name</label>
+          <input type="text" id="contact-name" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label for="contact-phone">Phone Number (International)</label>
+          <input type="tel" id="contact-phone" placeholder="+1 234 567 8900" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btn-modal-cancel" class="modal-btn cancel">Cancel</button>
+          <button type="submit" class="modal-btn submit">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hidden WebRTC Remote Audio Playback Node -->
+  <audio id="remote-audio" autoplay></audio>
+
+  <!-- Main JavaScript bundle -->
+  <script src="app.js"></script>
+</body>
+</html>
